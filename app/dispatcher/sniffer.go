@@ -50,11 +50,20 @@ var errUnknownContent = newError("unknown content")
 func (s *Sniffer) Sniff(c context.Context, payload []byte, shouldSniffDomain bool) (SniffResult, error) {
 	var pendingSniffer []snifferWithMetadata
 	for _, si := range s.sniffer {
-		s := si.protocolSniffer
+		sd := si.domainSniffer
+		sp := si.protocolSniffer
+
 		if si.metadataSniffer {
 			continue
 		}
-		result, err := s(c, payload)
+
+		var result SniffResult
+		var err error
+		if shouldSniffDomain {
+			result, err = sd(c, payload)
+		} else {
+			result, err = sp(c, payload)
+		}
 		if err == common.ErrNoClue {
 			pendingSniffer = append(pendingSniffer, si)
 			continue
@@ -76,12 +85,14 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, shouldSniffDomain boo
 func (s *Sniffer) SniffMetadata(c context.Context) (SniffResult, error) {
 	var pendingSniffer []snifferWithMetadata
 	for _, si := range s.sniffer {
-		s := si.protocolSniffer
+		sd := si.domainSniffer
+
 		if !si.metadataSniffer {
 			pendingSniffer = append(pendingSniffer, si)
 			continue
 		}
-		result, err := s(c, nil)
+
+		result, err := sd(c, nil)
 		if err == common.ErrNoClue {
 			pendingSniffer = append(pendingSniffer, si)
 			continue
