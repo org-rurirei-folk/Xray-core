@@ -32,3 +32,7 @@ func SniffProtocolBittorrent(b []byte) (*SniffHeader, error) {
 
 	return nil, errNotBittorrent
 }
+
+func SniffDomainBittorrent(b []byte) (*SniffHeader, error) {
+	return SniffProtocolBittorrent(b)
+}
