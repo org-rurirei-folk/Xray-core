@@ -28,15 +28,15 @@ type snifferWithMetadata struct {
 }
 
 type Sniffer struct {
-	sniffer []protocolSnifferWithMetadata
+	sniffer []snifferWithMetadata
 }
 
 func NewSniffer(ctx context.Context) *Sniffer {
 	ret := &Sniffer{
-		sniffer: []protocolSnifferWithMetadata{
-			{func(c context.Context, b []byte, s bool) (SniffResult, error) { return http.SniffHTTP(b, s) }, false},
-			{func(c context.Context, b []byte, s bool) (SniffResult, error) { return tls.SniffTLS(b, s) }, false},
-			{func(c context.Context, b []byte, s bool) (SniffResult, error) { return bittorrent.SniffBittorrent(b, s) }, false},
+		sniffer: []snifferWithMetadata{
+			{func(c context.Context, b []byte) (SniffResult, error) { return http.SniffDomainHTTP(b) }, func(c context.Context, b []byte) (SniffResult, error) { return http.SniffProtocolHTTP(b) }, false},
+			{func(c context.Context, b []byte) (SniffResult, error) { return tls.SniffDomainTLS(b) }, func(c context.Context, b []byte) (SniffResult, error) { return tls.SniffProtocolTLS(b) }, false},
+			{func(c context.Context, b []byte) (SniffResult, error) { return bittorrent.SniffDomainBittorrent(b) }, func(c context.Context, b []byte) (SniffResult, error) { return bittorrent.SniffProtocolBittorrent(b) }, false},
 		},
 	}
 	if sniffer, err := newFakeDNSSniffer(ctx); err == nil {
@@ -48,7 +48,7 @@ func NewSniffer(ctx context.Context) *Sniffer {
 var errUnknownContent = newError("unknown content")
 
 func (s *Sniffer) Sniff(c context.Context, payload []byte, shouldSniffDomain bool) (SniffResult, error) {
-	var pendingSniffer []protocolSnifferWithMetadata
+	var pendingSniffer []snifferWithMetadata
 	for _, si := range s.sniffer {
 		s := si.protocolSniffer
 		if si.metadataSniffer {
@@ -74,7 +74,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, shouldSniffDomain boo
 }
 
 func (s *Sniffer) SniffMetadata(c context.Context) (SniffResult, error) {
-	var pendingSniffer []protocolSnifferWithMetadata
+	var pendingSniffer []snifferWithMetadata
 	for _, si := range s.sniffer {
 		s := si.protocolSniffer
 		if !si.metadataSniffer {
