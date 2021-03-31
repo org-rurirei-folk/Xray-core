@@ -14,9 +14,12 @@ type SniffResult interface {
 	Domain() string
 }
 
-type protocolSniffer func(context.Context, []byte, bool) (SniffResult, error)
+type domainSniffer func(context.Context, []byte) (SniffResult, error)
 
-type protocolSnifferWithMetadata struct {
+type protocolSniffer func(context.Context, []byte) (SniffResult, error)
+
+type snifferWithMetadata struct {
+	domainSniffer   domainSniffer
 	protocolSniffer protocolSniffer
 	// A Metadata sniffer will be invoked on connection establishment only, with nil body,
 	// for both TCP and UDP connections
