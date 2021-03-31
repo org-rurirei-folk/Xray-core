@@ -54,7 +54,7 @@ func (s *Sniffer) Sniff(c context.Context, payload []byte, shouldSniffDomain boo
 		if si.metadataSniffer {
 			continue
 		}
-		result, err := s(c, payload, shouldSniffDomain)
+		result, err := s(c, payload)
 		if err == common.ErrNoClue {
 			pendingSniffer = append(pendingSniffer, si)
 			continue
@@ -81,7 +81,7 @@ func (s *Sniffer) SniffMetadata(c context.Context) (SniffResult, error) {
 			pendingSniffer = append(pendingSniffer, si)
 			continue
 		}
-		result, err := s(c, nil, true)
+		result, err := s(c, nil)
 		if err == common.ErrNoClue {
 			pendingSniffer = append(pendingSniffer, si)
 			continue
