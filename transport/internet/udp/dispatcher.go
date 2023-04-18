@@ -139,15 +139,17 @@ func handleInput(ctx context.Context, conn *connEntry, dest net.Destination, cal
 }
 
 type dispatcherConn struct {
-	dispatcher *Dispatcher
-	cache      chan *udp.Packet
-	done       *done.Instance
+	dispatcher  *Dispatcher
+	cache       chan *udp.Packet
+	done        *done.Instance
+	closeSignal *signal.Notifier
 }
 
 func DialDispatcher(ctx context.Context, dispatcher routing.Dispatcher) (net.PacketConn, error) {
 	c := &dispatcherConn{
-		cache: make(chan *udp.Packet, 16),
-		done:  done.New(),
+		cache:       make(chan *udp.Packet, 16),
+		done:        done.New(),
+		closeSignal: signal.NewNotifier(),
 	}
 
 	d := &Dispatcher{
